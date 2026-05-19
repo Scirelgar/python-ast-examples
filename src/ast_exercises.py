@@ -382,7 +382,7 @@ def exercise_9_detect_routes(source: str) -> list[dict]:
             "line": line_number,
         }
     """
-    # TODO:
+    # DONE:
     # - Visit FunctionDef nodes.
     # - Inspect node.decorator_list.
     # - Detect ast.Call decorators.
@@ -438,7 +438,7 @@ def exercise_10_collect_function_scoped_calls(source: str) -> list[dict]:
             "line": line_number,
         }
     """
-    # TODO:
+    # DONE:
     # - Track the current function.
     # - Visit Call nodes.
     # - Record the current function, call name, and line.
@@ -490,13 +490,66 @@ def exercise_11_extract_facts(source: str) -> list[Fact]:
     Do not infer COSMIC movements here.
     Only collect source-level evidence.
     """
-    # TODO:
+    # DONE:
     # - Track the current function.
     # - Detect route decorators on FunctionDef.
     # - Detect db.session.add(...) calls.
     # - Detect Return nodes.
     # - Return a list of Fact objects.
-    raise NotImplementedError
+    tree = ast.parse(source)
+
+    class FactCollector(ast.NodeVisitor):
+        def __init__(self) -> None:
+            self.facts: list[Fact] = []
+            self.current_func = None
+
+        def _handle_decorators(self, node: ast.FunctionDef):
+            for decorator in node.decorator_list:
+                pp.pprint(decorator)
+                dec_call_name = get_call_name(decorator)
+                if dec_call_name in ["app.get", "app.post"]:
+                    self.facts.append(
+                        Fact(
+                            "route_candidate",
+                            dec_call_name,
+                            node.name,
+                            node.lineno,
+                        )
+                    )
+
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
+            prev = self.current_func
+            self.current_func = node
+            self._handle_decorators(node)
+
+            self.generic_visit(node)
+            self.current_func = prev
+
+        def visit_Return(self, node: ast.Return) -> Any:
+            self.facts.append(
+                Fact(
+                    "exit_candidate",
+                    "return",
+                    self.current_func.name,
+                    node.lineno,
+                )
+            )
+
+        def visit_Call(self, node: ast.Call) -> Any:
+            func_call_name = get_call_name(node)
+            if func_call_name == "db.session.add":
+                self.facts.append(
+                    Fact(
+                        "write_candidate",
+                        func_call_name,
+                        self.current_func.name,
+                        node.lineno,
+                    )
+                )
+
+    fc = FactCollector()
+    fc.visit(tree)
+    return fc.facts
 
 
 # ============================================================
