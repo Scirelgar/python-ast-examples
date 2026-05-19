@@ -239,10 +239,23 @@ def exercise_6_collect_dotted_calls(source: str) -> list[str]:
     Expected:
         ["db.session.add", "requests.post"]
     """
-    # TODO:
+    # DONE:
     # - Visit Call nodes.
     # - Use get_call_name(node.func).
-    raise NotImplementedError
+    tree = ast.parse(source)
+
+    class CallVisitor(ast.NodeVisitor):
+        def __init__(self) -> None:
+            self.calls = []
+
+        def visit_Call(self, node: ast.Call) -> Any:
+            self.calls.append(get_call_name(node))
+            self.generic_visit(node)
+
+    cv = CallVisitor()
+    cv.visit(tree)
+
+    return cv.calls
 
 
 # ============================================================
