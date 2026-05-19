@@ -334,7 +334,28 @@ def exercise_8_detect_read_candidates(source: str) -> list[tuple[str, int]]:
     # - Visit Call nodes.
     # - Use get_call_name(node.func).
     # - Detect known read-call patterns.
-    raise NotImplementedError
+    tree = ast.parse(source)
+
+    class ReadCallCollector(ast.NodeVisitor):
+        read_candidates = [
+            "db.session.query",
+            "User.query.all",
+        ]
+
+        def __init__(self) -> None:
+            self.read_calls: list[tuple] = []
+
+        def visit_Call(self, node: ast.Call) -> Any:
+            call_name = get_call_name(node)
+
+            if call_name in self.read_candidates:
+                self.read_calls.append((call_name, node.lineno))
+            self.generic_visit(node)
+
+    wcc = ReadCallCollector()
+    wcc.visit(tree)
+
+    return wcc.read_calls
 
 
 # ============================================================
