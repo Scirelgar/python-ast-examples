@@ -279,7 +279,7 @@ def exercise_7_detect_write_candidates(source: str) -> list[dict]:
             "line": line_number,
         }
     """
-    # TODO:
+    # DONE:
     # - Visit Call nodes.
     # - Use get_call_name(node.func).
     # - If the call is in the write-call set, record it.
@@ -330,7 +330,7 @@ def exercise_8_detect_read_candidates(source: str) -> list[tuple[str, int]]:
     Return tuples:
         (call_name, line_number)
     """
-    # TODO:
+    # DONE:
     # - Visit Call nodes.
     # - Use get_call_name(node.func).
     # - Detect known read-call patterns.
@@ -388,7 +388,37 @@ def exercise_9_detect_routes(source: str) -> list[dict]:
     # - Detect ast.Call decorators.
     # - Resolve decorator.func with get_call_name.
     # - Extract the first string argument as the route path.
-    raise NotImplementedError
+    tree = ast.parse(source)
+
+    class RouteHandlerCollecor(ast.NodeVisitor):
+        supported_handlers = [
+            "app.get",
+            "app.post",
+            "router.get",
+            "router.post",
+        ]
+
+        def __init__(self) -> None:
+            self.entries: list[dict] = []
+
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
+            if len(node.decorator_list) != 0:
+                for decorator in node.decorator_list:
+                    if isinstance(decorator, ast.Call):
+                        dec_call_name = get_call_name(decorator.func)
+                        if dec_call_name in self.supported_handlers:
+                            self.entries.append(
+                                {
+                                    "method": dec_call_name,
+                                    "path": decorator.args[0].value,
+                                    "function": node.name,
+                                    "line": node.lineno,
+                                }
+                            )
+
+    rhc = RouteHandlerCollecor()
+    rhc.visit(tree)
+    return rhc.entries
 
 
 # ============================================================
