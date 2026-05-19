@@ -283,7 +283,34 @@ def exercise_7_detect_write_candidates(source: str) -> list[dict]:
     # - Visit Call nodes.
     # - Use get_call_name(node.func).
     # - If the call is in the write-call set, record it.
-    raise NotImplementedError
+    tree = ast.parse(source)
+
+    class WriteCallCollector(ast.NodeVisitor):
+        write_candidates = [
+            "db.session.add",
+            "db.session.delete",
+            "db.session.merge",
+        ]
+
+        def __init__(self) -> None:
+            self.write_calls: list[dict] = []
+
+        def visit_Call(self, node: ast.Call) -> Any:
+            call_name = get_call_name(node)
+
+            if call_name in self.write_candidates:
+                self.write_calls.append(
+                    {
+                        "call": call_name,
+                        "line": node.lineno,
+                    }
+                )
+            self.generic_visit(node)
+
+    wcc = WriteCallCollector()
+    wcc.visit(tree)
+
+    return wcc.write_calls
 
 
 # ============================================================
