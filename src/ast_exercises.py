@@ -442,7 +442,34 @@ def exercise_10_collect_function_scoped_calls(source: str) -> list[dict]:
     # - Track the current function.
     # - Visit Call nodes.
     # - Record the current function, call name, and line.
-    raise NotImplementedError
+    tree = ast.parse(source)
+
+    class FuncCallCollector(ast.NodeVisitor):
+        def __init__(self) -> None:
+            self.funccalls: list[dict] = []
+            self.currentfunc = None
+
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
+            prev = self.currentfunc
+            self.currentfunc = node
+            for element in node.body:
+                value = element.value
+                pp.pp(value)
+                if isinstance(value, ast.Call):
+                    self.funccalls.append(
+                        {
+                            "function": self.currentfunc.name,
+                            "call": get_call_name(value.func),
+                            "line": value.lineno,
+                        }
+                    )
+            self.generic_visit(node)
+            self.currentfunc = prev
+
+    fcc = FuncCallCollector()
+    fcc.visit(tree)
+
+    return fcc.funccalls
 
 
 # ============================================================
