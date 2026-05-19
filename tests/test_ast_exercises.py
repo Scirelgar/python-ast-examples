@@ -662,19 +662,19 @@ class TestExercise12:
                 kind="Entry",
                 function="create_user",
                 line=3,
-                rationale="Route handler suggests data entering from a functional user",
+                rationale="",
             ),
             DataMovement(
                 kind="Write",
                 function="create_user",
                 line=4,
-                rationale="Persistence mutation suggests writing to storage",
+                rationale="",
             ),
             DataMovement(
                 kind="Exit",
                 function="create_user",
                 line=5,
-                rationale="Return statement suggests data leaving the process",
+                rationale="",
             ),
         ]
 

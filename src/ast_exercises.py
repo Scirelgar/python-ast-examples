@@ -573,4 +573,21 @@ def exercise_12_infer_movements(facts: list[Fact]) -> list[DataMovement]:
     # - Iterate through facts.
     # - Convert each known fact kind into a DataMovement.
     # - Preserve function and line information.
-    raise NotImplementedError
+    data_mvts: list[DataMovement] = []
+
+    def _facts_to_datamvt(fact: Fact) -> DataMovement:
+        data_mvt = DataMovement(None, fact.function, fact.line, "")
+        if fact.kind == "route_candidate":
+            data_mvt.kind = "Entry"
+        elif fact.kind == "write_candidate":
+            data_mvt.kind = "Write"
+        elif fact.kind == "exit_candidate":
+            data_mvt.kind = "Exit"
+        else:
+            return None
+        return data_mvt
+
+    for fact in facts:
+        if (data_mvt := _facts_to_datamvt(fact)) is not None:
+            data_mvts.append(data_mvt)
+    return data_mvts
