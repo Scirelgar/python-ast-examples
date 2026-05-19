@@ -121,7 +121,7 @@ def exercise_3_collect_function_args(source: str) -> dict[str, list[str]]:
     Expected:
         {"create_user": ["name", "email"]}
     """
-    # TODO:
+    # DONE:
     # - Visit FunctionDef nodes.
     # - Read node.args.args.
     # - Each argument node has an .arg attribute.
@@ -155,7 +155,7 @@ def exercise_4_count_returns(source: str) -> dict[str, int]:
 
     Nested returns inside if/else blocks should count.
     """
-    # TODO:
+    # DONE:
     # - Track the current function.
     # - Initialize its return count when entering a FunctionDef.
     # - Increment the count in visit_Return.
@@ -204,10 +204,22 @@ def exercise_5_collect_simple_calls(source: str) -> list[str]:
 
     Dotted calls such as db.session.add(...) should be ignored here.
     """
-    # TODO:
+    # DONE:
     # - Visit Call nodes.
     # - Only collect calls where node.func is ast.Name.
-    raise NotImplementedError
+    tree = ast.parse(source)
+
+    class NameVisitor(ast.NodeVisitor):
+        def __init__(self) -> None:
+            self.names = []
+
+        def visit_Call(self, node: ast.Call) -> Any:
+            if isinstance(node.func, ast.Name):
+                self.names.append(node.func.id)
+
+    nv = NameVisitor()
+    nv.visit(tree)
+    return nv.names
 
 
 # ============================================================
